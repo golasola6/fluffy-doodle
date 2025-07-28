@@ -117,7 +117,6 @@ async def all_btns_handler(client, message):
 
     await message.reply_text("🧩 All Buttons:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-
 @Bot.on_callback_query(filters.regex("delete_btn_"))
 async def delete_button(client, callback_query):
     btn_id = callback_query.data.split("_")[-1]
@@ -135,12 +134,11 @@ async def update_button(client, callback_query):
 @Bot.on_callback_query(filters.regex("about_bot"))
 async def about_handler(c, cb):
     about_text = """
-👑 <b>Owner</b>: [Yash.K](https://t.me/directapkpromo)
+👑 <b>Owner</b>: <a href='https://t.me/directapkpromo'>SimplyfyTuber</a>
+🛠 <b>Developer:</b> <a href='https://telegram.me/LazyDeveloperr'>LazyDeveloperr</a>
 
-**🛠 <b>Developer:</b> [LazyDeveloperr](https://t.me/LazyDeveloperr)
-
-**🧠 <b>Powered By:</b> Pyrogram & MongoDB  
-**🔐 <b>Secure:</b> Auth-based Admin Panel & Dynamic Buttons
+🧠 <b>Powered By:</b> Pyrogram & MongoDB  
+🔐 <b>Secure:</b> Auth-based Admin Panel & Dynamic Buttons
 
 —
 🧡 <b>Made with love by LazyDeveloper</b>
