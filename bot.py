@@ -31,7 +31,7 @@ async def start_handler(c, m):
 
         # Default button
         lazydeveloper_btn = [[
-            InlineKeyboardButton('ABOUT', url='https://t.me/lazydeveloperr')
+            InlineKeyboardButton('🎃 ÄßÖÚ† 🎃', callback_data="about_bot")
         ]]
 
         # Fetch all dynamic buttons from DB
@@ -163,6 +163,21 @@ async def update_button(client, callback_query):
     Bot.update_btn_state = {"user": callback_query.from_user.id, "btn_id": btn_id}
     await callback_query.answer()
 
+@Bot.on_callback_query(filters.regex("about_bot"))
+async def about_handler(c, cb):
+    about_text = """
+**👑 Owner:** [Yash.K](https://t.me/directapkpromo)
+
+**🛠 Developer:** [LazyDeveloperr](https://t.me/LazyDeveloperr)
+
+**🧠 Powered By:** Pyrogram & MongoDB  
+**🔐 Secure:** Auth-based Admin Panel & Dynamic Buttons
+
+—
+🧡 *Made with love by LazyDeveloper*
+    """
+    await cb.message.edit_text(about_text, disable_web_page_preview=True)
+
 @Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]))
 async def admin_text_handler(client, message):
     user_id = message.from_user.id
@@ -196,32 +211,6 @@ async def admin_text_handler(client, message):
 
         await message.reply_text(f"✅ {inserted} button(s) saved.")
         Bot.add_btn_state = None
-
-# @Bot.on_message(filters.text & filters.user(ADMINS))
-# async def update_btn_text(client, message):
-#     state = getattr(Bot, "update_btn_state", None)
-#     if state and state["user"] == message.from_user.id:
-#         if " - " in message.text:
-#             text, url = message.text.split(" - ", 1)
-#             await Cluster["buttons"].update_one(
-#                 {"_id": ObjectId(state["btn_id"])},
-#                 {"$set": {"text": text.strip(), "url": url.strip()}}
-#             )
-#             await message.reply_text("✅ Button updated.")
-#         else:
-#             await message.reply_text("⚠️ Invalid format. Use `Text - URL`")
-#         Bot.update_btn_state = None
-
-
-# @Bot.on_message(filters.command("start") & filters.private)                    
-# async def start_handler(c, m):
-#     user_id = m.from_user.id
-#     if not await Data.find_one({'id': user_id}): await Data.insert_one({'id': user_id})
-#     lazydeveloper_btn = [[
-#         InlineKeyboardButton('❤. Kannada Monsters .🍟', url='https://t.me/+2ruz5u2nJFViNWI1')
-#     ]]
-#     joinlink = f"https://t.me/+2ruz5u2nJFViNWI1"
-#     return await m.reply_text(text=START_TEXT.format(m.from_user.mention, joinlink), disable_web_page_preview=True)
 
 
 @Bot.on_message(filters.command(["broadcast", "users"]) & filters.user(ADMINS))  
