@@ -86,22 +86,21 @@ async def all_btns_handler(client, message):
 
     await message.reply_text("🧩 All Buttons:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-@Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]) )
-async def capture_btn_input(client, message):
-    user_id = message.from_user.id
-    if getattr(Bot, "add_btn_state", None) == user_id:
-        btns = message.text.strip().split("\n")
-        inserted = 0
+# @Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]) )
+# async def capture_btn_input(client, message):
+#     user_id = message.from_user.id
+#     if getattr(Bot, "add_btn_state", None) == user_id:
+#         btns = message.text.strip().split("\n")
+#         inserted = 0
 
-        for btn in btns:
-            if " - " in btn:
-                text, url = btn.split(" - ", 1)
-                await Cluster["buttons"].insert_one({"text": text.strip(), "url": url.strip()})
-                inserted += 1
+#         for btn in btns:
+#             if " - " in btn:
+#                 text, url = btn.split(" - ", 1)
+#                 await Cluster["buttons"].insert_one({"text": text.strip(), "url": url.strip()})
+#                 inserted += 1
 
-        await message.reply_text(f"✅ {inserted} button(s) saved.")
-        Bot.add_btn_state = None
-
+#         await message.reply_text(f"✅ {inserted} button(s) saved.")
+#         Bot.add_btn_state = None
 
 @Bot.on_callback_query(filters.regex("delete_btn_"))
 async def delete_button(client, callback_query):
@@ -117,20 +116,54 @@ async def update_button(client, callback_query):
     Bot.update_btn_state = {"user": callback_query.from_user.id, "btn_id": btn_id}
     await callback_query.answer()
 
-@Bot.on_message(filters.text & filters.user(ADMINS))
-async def update_btn_text(client, message):
-    state = getattr(Bot, "update_btn_state", None)
-    if state and state["user"] == message.from_user.id:
-        if " - " in message.text:
-            text, url = message.text.split(" - ", 1)
-            await Cluster["buttons"].update_one(
-                {"_id": ObjectId(state["btn_id"])},
-                {"$set": {"text": text.strip(), "url": url.strip()}}
-            )
-            await message.reply_text("✅ Button updated.")
-        else:
-            await message.reply_text("⚠️ Invalid format. Use `Text - URL`")
-        Bot.update_btn_state = None
+@Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]))
+async def admin_text_handler(client, message):
+    user_id = message.from_user.id
+
+    # 🟩 Update Button Logic
+    if getattr(Bot, "update_btn_state", None):
+        state = Bot.update_btn_state
+        if state["user"] == user_id:
+            if " - " in message.text:
+                text, url = message.text.split(" - ", 1)
+                await Cluster["buttons"].update_one(
+                    {"_id": ObjectId(state["btn_id"])},
+                    {"$set": {"text": text.strip(), "url": url.strip()}}
+                )
+                await message.reply_text("✅ Button updated.")
+            else:
+                await message.reply_text("⚠️ Invalid format. Use `Text - URL`")
+            Bot.update_btn_state = None
+            return
+
+    # 🟨 Add Button Logic
+    if getattr(Bot, "add_btn_state", None) == user_id:
+        btns = message.text.strip().split("\n")
+        inserted = 0
+
+        for btn in btns:
+            if " - " in btn:
+                text, url = btn.split(" - ", 1)
+                await Cluster["buttons"].insert_one({"text": text.strip(), "url": url.strip()})
+                inserted += 1
+
+        await message.reply_text(f"✅ {inserted} button(s) saved.")
+        Bot.add_btn_state = None
+
+# @Bot.on_message(filters.text & filters.user(ADMINS))
+# async def update_btn_text(client, message):
+#     state = getattr(Bot, "update_btn_state", None)
+#     if state and state["user"] == message.from_user.id:
+#         if " - " in message.text:
+#             text, url = message.text.split(" - ", 1)
+#             await Cluster["buttons"].update_one(
+#                 {"_id": ObjectId(state["btn_id"])},
+#                 {"$set": {"text": text.strip(), "url": url.strip()}}
+#             )
+#             await message.reply_text("✅ Button updated.")
+#         else:
+#             await message.reply_text("⚠️ Invalid format. Use `Text - URL`")
+#         Bot.update_btn_state = None
 
 
 # @Bot.on_message(filters.command("start") & filters.private)                    
