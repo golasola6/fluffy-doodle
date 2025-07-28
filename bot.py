@@ -45,9 +45,6 @@ async def start_handler(c, m):
 
             dynamic_buttons.append(row)
 
-        # for btn in buttons:
-        #     .append([InlineKeyboardButton(btn["text"], url=btn["url"])])
-
         # Combine buttons
         final_keyboard =  dynamic_buttons + lazydeveloper_btn
 
@@ -74,20 +71,7 @@ async def start_handler(c, m):
                 reply_markup=InlineKeyboardMarkup(final_keyboard),
                 disable_web_page_preview=True
             )
-        # await c.send_video(
-        #     chat_id=m.from_user.id,
-        #     video='https://raw.githubusercontent.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
-        #     caption=START_TEXT.format(m.from_user.mention, joinlink),
-        #     reply_markup=InlineKeyboardMarkup(final_keyboard),
-        #     supports_streaming=True, 
-        #     protect_content=True, 
-        #     parse_mode = enums.ParseMode.HTML
-        # )
-        #  await m.reply_text(
-        #     text=START_TEXT.format(m.from_user.mention, joinlink),
-        #     reply_markup=InlineKeyboardMarkup(final_keyboard),
-        #     disable_web_page_preview=True
-        # )
+
     except Exception as lazy:
         print(lazy)
 
@@ -133,21 +117,6 @@ async def all_btns_handler(client, message):
 
     await message.reply_text("🧩 All Buttons:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-# @Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]) )
-# async def capture_btn_input(client, message):
-#     user_id = message.from_user.id
-#     if getattr(Bot, "add_btn_state", None) == user_id:
-#         btns = message.text.strip().split("\n")
-#         inserted = 0
-
-#         for btn in btns:
-#             if " - " in btn:
-#                 text, url = btn.split(" - ", 1)
-#                 await Cluster["buttons"].insert_one({"text": text.strip(), "url": url.strip()})
-#                 inserted += 1
-
-#         await message.reply_text(f"✅ {inserted} button(s) saved.")
-#         Bot.add_btn_state = None
 
 @Bot.on_callback_query(filters.regex("delete_btn_"))
 async def delete_button(client, callback_query):
@@ -166,17 +135,59 @@ async def update_button(client, callback_query):
 @Bot.on_callback_query(filters.regex("about_bot"))
 async def about_handler(c, cb):
     about_text = """
-**👑 Owner:** [Yash.K](https://t.me/directapkpromo)
+👑 <b>Owner</b>: [Yash.K](https://t.me/directapkpromo)
 
-**🛠 Developer:** [LazyDeveloperr](https://t.me/LazyDeveloperr)
+**🛠 <b>Developer:</b> [LazyDeveloperr](https://t.me/LazyDeveloperr)
 
-**🧠 Powered By:** Pyrogram & MongoDB  
-**🔐 Secure:** Auth-based Admin Panel & Dynamic Buttons
+**🧠 <b>Powered By:</b> Pyrogram & MongoDB  
+**🔐 <b>Secure:</b> Auth-based Admin Panel & Dynamic Buttons
 
 —
-🧡 *Made with love by LazyDeveloper*
+🧡 <b>Made with love by LazyDeveloper</b>
     """
-    await cb.message.edit_text(about_text, disable_web_page_preview=True)
+    lazydeveloper_btn = [[
+            InlineKeyboardButton('ཫ𐰌𓇽 HOME 𓇽𐰌ཀ', callback_data="home")
+        ]]
+    await cb.message.edit_text(
+                            about_text,
+                            reply_markup=InlineKeyboardMarkup(lazydeveloper_btn),
+                            disable_web_page_preview=True,
+                            parse_mode=enums.ParseMode.HTML
+                            )
+
+@Bot.on_callback_query(filters.regex("home"))
+async def about_handler(c, cb):
+    try:
+        # Default button
+        lazydeveloper_btn = [[
+            InlineKeyboardButton('🎃 ÄßÖÚ† 🎃', callback_data="about_bot")
+        ]]
+
+        # Fetch all dynamic buttons from DB
+        dynamic_buttons = []
+        buttons = await Cluster["buttons"].find().to_list(None)
+        for i in range(0, len(buttons), 2):
+            row = []
+            row.append(InlineKeyboardButton(buttons[i]["text"], url=buttons[i]["url"]))
+            if i+1 < len(buttons):
+                row.append(InlineKeyboardButton(buttons[i+1]["text"], url=buttons[i+1]["url"]))
+
+            dynamic_buttons.append(row)
+
+        # Combine buttons
+        final_keyboard =  dynamic_buttons + lazydeveloper_btn
+
+        # Start message
+        joinlink = f"https://t.me/lazydeveloperr"
+
+        return await cb.message.edit_text(
+                START_TEXT.format(cb.message.from_user.mention, joinlink),
+                reply_markup=InlineKeyboardMarkup(final_keyboard),
+                disable_web_page_preview=True,
+                parse_mode=enums.ParseMode.HTML
+            )
+    except Exception as lazy:
+        print(lazy)
 
 @Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]))
 async def admin_text_handler(client, message):
