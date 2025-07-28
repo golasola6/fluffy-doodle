@@ -47,7 +47,7 @@ async def start_handler(c, m):
         joinlink = f"https://t.me/lazydeveloperr"
         return await c.send_video(
             chat_id=m.from_user.id,
-            video='https://raw.githubusercontent.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
+            video='https://github.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
             caption=START_TEXT.format(m.from_user.mention, joinlink),
             reply_markup=InlineKeyboardMarkup(final_keyboard),
             supports_streaming=True, 
