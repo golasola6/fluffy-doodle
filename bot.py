@@ -43,17 +43,38 @@ async def start_handler(c, m):
         # Combine buttons
         final_keyboard = lazydeveloper_btn + dynamic_buttons
 
+        # Fetch video from DB
+        video_data = await Cluster["assets"].find_one({"_id": "start_video"})
+        video = video_data["video"] if video_data else None
+
         # Start message
         joinlink = f"https://t.me/lazydeveloperr"
-        return await c.send_video(
-            chat_id=m.from_user.id,
-            video='https://github.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
-            caption=START_TEXT.format(m.from_user.mention, joinlink),
-            reply_markup=InlineKeyboardMarkup(final_keyboard),
-            supports_streaming=True, 
-            protect_content=True, 
-            parse_mode = enums.ParseMode.HTML
-        )
+
+        if video:
+            return await c.send_video(
+                chat_id=user_id,
+                video=video,
+                caption=START_TEXT.format(m.from_user.mention, joinlink),
+                reply_markup=InlineKeyboardMarkup(final_keyboard),
+                supports_streaming=True,
+                protect_content=True,
+                parse_mode=enums.ParseMode.HTML
+            )
+        else:
+            return await m.reply_text(
+                text=START_TEXT.format(m.from_user.mention, joinlink),
+                reply_markup=InlineKeyboardMarkup(final_keyboard),
+                disable_web_page_preview=True
+            )
+        # await c.send_video(
+        #     chat_id=m.from_user.id,
+        #     video='https://raw.githubusercontent.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
+        #     caption=START_TEXT.format(m.from_user.mention, joinlink),
+        #     reply_markup=InlineKeyboardMarkup(final_keyboard),
+        #     supports_streaming=True, 
+        #     protect_content=True, 
+        #     parse_mode = enums.ParseMode.HTML
+        # )
         #  await m.reply_text(
         #     text=START_TEXT.format(m.from_user.mention, joinlink),
         #     reply_markup=InlineKeyboardMarkup(final_keyboard),
@@ -61,7 +82,25 @@ async def start_handler(c, m):
         # )
     except Exception as lazy:
         print(lazy)
-  
+
+@Bot.on_message(filters.command("set_video") & filters.user(ADMINS))
+async def set_video(c, m):
+    try:
+        if not m.reply_to_message or not m.reply_to_message.video:
+            return await m.reply("🎬 Reply to a video to set as the intro video.")
+
+        file_id = m.reply_to_message.video.file_id
+
+        await Cluster["assets"].update_one(
+            {"_id": "start_video"},
+            {"$set": {"video": file_id}},
+            upsert=True
+        )
+        await m.reply("✅ Start intro video saved/updated successfully!")
+    except Exception as e:
+        await m.reply(f"⚠️ Error: {e}")
+
+
 @Bot.on_message(filters.command("add_btn") & filters.user(ADMINS))
 async def add_btn_handler(client, message):
     await message.reply_text("Send me button(s) in format:\n\n`Button Text - URL`\n\nYou can add multiple lines like this too.", quote=True)
