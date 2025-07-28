@@ -86,20 +86,6 @@ async def all_btns_handler(client, message):
 
     await message.reply_text("🧩 All Buttons:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-@Bot.on_callback_query(filters.regex("delete_btn_"))
-async def delete_button(client, callback_query):
-    btn_id = callback_query.data.split("_")[-1]
-    await Cluster["buttons"].delete_one({"_id": ObjectId(btn_id)})
-    await callback_query.answer("Button deleted.")
-    await callback_query.message.delete()
-
-@Bot.on_callback_query(filters.regex("update_btn_"))
-async def update_button(client, callback_query):
-    btn_id = callback_query.data.split("_")[-1]
-    await callback_query.message.reply_text(f"Send new format for this button (text - url):", quote=True)
-    Bot.update_btn_state = {"user": callback_query.from_user.id, "btn_id": btn_id}
-    await callback_query.answer()
-
 @Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]) )
 async def capture_btn_input(client, message):
     user_id = message.from_user.id
@@ -115,6 +101,21 @@ async def capture_btn_input(client, message):
 
         await message.reply_text(f"✅ {inserted} button(s) saved.")
         Bot.add_btn_state = None
+
+
+@Bot.on_callback_query(filters.regex("delete_btn_"))
+async def delete_button(client, callback_query):
+    btn_id = callback_query.data.split("_")[-1]
+    await Cluster["buttons"].delete_one({"_id": ObjectId(btn_id)})
+    await callback_query.answer("Button deleted.")
+    await callback_query.message.delete()
+
+@Bot.on_callback_query(filters.regex("update_btn_"))
+async def update_button(client, callback_query):
+    btn_id = callback_query.data.split("_")[-1]
+    await callback_query.message.reply_text(f"Send new format for this button (text - url):", quote=True)
+    Bot.update_btn_state = {"user": callback_query.from_user.id, "btn_id": btn_id}
+    await callback_query.answer()
 
 @Bot.on_message(filters.text & filters.user(ADMINS))
 async def update_btn_text(client, message):
