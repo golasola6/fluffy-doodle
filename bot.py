@@ -301,7 +301,7 @@ async def req_accept(c, m):
             return await c.send_video(
                 chat_id=user_id,
                 video=video,
-                caption=ACCEPTED_TEXT.format(m.from_user.mention, joinlink),
+                caption=ACCEPTED_TEXT.format(user=m.from_user.mention, chat=m.chat.title, joinlink=joinlink),
                 reply_markup=InlineKeyboardMarkup(final_keyboard),
                 supports_streaming=True,
                 protect_content=True,
