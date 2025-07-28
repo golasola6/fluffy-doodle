@@ -265,33 +265,30 @@ async def broadcast(c, m):
     await m.reply_text(f"Broadcast Completed:\nCompleted in {time_taken} seconds.\n\nTotal Users {total_users}\nCompleted: {done} / {total_users}\nSuccess: {success}\nFailed: {failed}", quote=True)
 
 @Bot.on_message(filters.command("accept_old_request") & filters.user(ADMINS))
-async def accept_old_requests(c, m):
-    chat_id = m.chat.id
-
+async def accept_old_requests_handler(c, m):
     try:
-        # Get pending join requests
-        pending = await c.get_chat_join_requests(chat_id)
+        # Extract channel_id from the command
+        if len(m.command) < 2:
+            return await m.reply_text("Please provide the channel ID.\nExample:\n/accept_old_request -1001234567890")
+        
+        channel_id = int(m.command[1])
 
-        if not pending:
-            await m.reply_text("✨ No pending join requests to approve, my love!")
-            return
+        # Get all pending requests
+        pending = await c.get_chat_join_requests(channel_id)
 
-        count = 0
-        for user in pending:
+        approved = 0
+        async for req in pending:
             try:
-                await c.approve_chat_join_request(chat_id, user.from_user.id)
-                # Store in DB if not already present
-                if not await Data.find_one({'id': user.from_user.id}):
-                    await Data.insert_one({'id': user.from_user.id})
-                count += 1
-            except Exception as e:
-                print(f"Error approving user {user.from_user.id}: {e}")
+                await c.approve_chat_join_request(chat_id=channel_id, user_id=req.from_user.id)
+                approved += 1
+                await asyncio.sleep(0.5)  # Gentle rate limiting
+            except Exception as err:
+                print(f"Error approving {req.from_user.id}: {err}")
 
-        await m.reply_text(f"🥰 Approved {count} pending join requests, sweetheart!")
-
+        await m.reply_text(f"✅ Approved {approved} pending join requests in channel: `{channel_id}`")
+    
     except Exception as e:
-        print(f"Error fetching join requests: {e}")
-        await m.reply_text("💔 Something went wrong while accepting requests.")
+        await m.reply_text(f"Something went wrong!\n\n<code>{e}</code>")
 
 @Bot.on_chat_join_request()
 async def req_accept(c, m):
