@@ -101,7 +101,7 @@ async def update_button(client, callback_query):
     Bot.update_btn_state = {"user": callback_query.from_user.id, "btn_id": btn_id}
     await callback_query.answer()
 
-@Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command("start", "all_btns", "broadcast", "users") )
+@Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]) )
 async def capture_btn_input(client, message):
     user_id = message.from_user.id
     if getattr(Bot, "add_btn_state", None) == user_id:
