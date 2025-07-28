@@ -50,7 +50,6 @@ async def start_handler(c, m):
             video='https://raw.githubusercontent.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
             caption=START_TEXT.format(m.from_user.mention, joinlink),
             reply_markup=InlineKeyboardMarkup(final_keyboard),
-            disable_web_page_preview=True,
             supports_streaming=True, 
             protect_content=True, 
             parse_mode = enums.ParseMode.HTML
