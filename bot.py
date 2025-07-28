@@ -37,11 +37,19 @@ async def start_handler(c, m):
         # Fetch all dynamic buttons from DB
         dynamic_buttons = []
         buttons = await Cluster["buttons"].find().to_list(None)
-        for btn in buttons:
-            dynamic_buttons.append([InlineKeyboardButton(btn["text"], url=btn["url"])])
+        for i in range(0, len(buttons), 2):
+            row = []
+            row.append(InlineKeyboardButton(buttons[i]["text"], url=buttons[i]["url"]))
+            if i+1 < len(buttons):
+                row.append(InlineKeyboardButton(buttons[i+1]["text"], url=buttons[i+1]["url"]))
+
+            dynamic_buttons.append(row)
+
+        # for btn in buttons:
+        #     .append([InlineKeyboardButton(btn["text"], url=btn["url"])])
 
         # Combine buttons
-        final_keyboard = lazydeveloper_btn + dynamic_buttons
+        final_keyboard =  dynamic_buttons + lazydeveloper_btn
 
         # Fetch video from DB
         video_data = await Cluster["assets"].find_one({"_id": "start_video"})
