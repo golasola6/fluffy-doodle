@@ -1,0 +1,8 @@
+pyrogram==2.0.106
+tgcrypto
+dnspython
+motor
+Flask
+gunicorn
+aiohttp
+Werkzeug
