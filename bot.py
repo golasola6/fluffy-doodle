@@ -20,26 +20,53 @@ Cluster = Dbclient['Cluster0']
 Data = Cluster['users']
 Bot = Client(name='LazyAutoAcceptBot', api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
+@Bot.on_message(filters.command("start") & filters.private)                    
+async def start_handler(c, m):
+    try:
+        user_id = m.from_user.id
+
+        # Add user to DB if not exists
+        if not await Data.find_one({'id': user_id}):
+            await Data.insert_one({'id': user_id})
+
+        # Default button
+        lazydeveloper_btn = [[
+            InlineKeyboardButton('ABOUT', url='https://t.me/lazydeveloperr')
+        ]]
+
+        # Fetch all dynamic buttons from DB
+        dynamic_buttons = []
+        buttons = await Cluster["buttons"].find().to_list(None)
+        for btn in buttons:
+            dynamic_buttons.append([InlineKeyboardButton(btn["text"], url=btn["url"])])
+
+        # Combine buttons
+        final_keyboard = lazydeveloper_btn + dynamic_buttons
+
+        # Start message
+        joinlink = f"https://t.me/lazydeveloperr"
+        return await c.send_video(
+            chat_id=m.from_user.id,
+            video='https://raw.githubusercontent.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
+            caption=START_TEXT.format(m.from_user.mention, joinlink),
+            reply_markup=InlineKeyboardMarkup(final_keyboard),
+            disable_web_page_preview=True,
+            supports_streaming=True, 
+            protect_content=True, 
+            parse_mode = enums.ParseMode.HTML
+        )
+        #  await m.reply_text(
+        #     text=START_TEXT.format(m.from_user.mention, joinlink),
+        #     reply_markup=InlineKeyboardMarkup(final_keyboard),
+        #     disable_web_page_preview=True
+        # )
+    except Exception as lazy:
+        print(lazy)
+  
 @Bot.on_message(filters.command("add_btn") & filters.user(ADMINS))
 async def add_btn_handler(client, message):
     await message.reply_text("Send me button(s) in format:\n\n`Button Text - URL`\n\nYou can add multiple lines like this too.", quote=True)
     Bot.add_btn_state = message.from_user.id
-
-@Bot.on_message(filters.text & filters.user(ADMINS))
-async def capture_btn_input(client, message):
-    user_id = message.from_user.id
-    if getattr(Bot, "add_btn_state", None) == user_id:
-        btns = message.text.strip().split("\n")
-        inserted = 0
-
-        for btn in btns:
-            if " - " in btn:
-                text, url = btn.split(" - ", 1)
-                await Cluster["buttons"].insert_one({"text": text.strip(), "url": url.strip()})
-                inserted += 1
-
-        await message.reply_text(f"✅ {inserted} button(s) saved.")
-        Bot.add_btn_state = None
 
 @Bot.on_message(filters.command("all_btns") & filters.user(ADMINS))
 async def all_btns_handler(client, message):
@@ -74,6 +101,22 @@ async def update_button(client, callback_query):
     Bot.update_btn_state = {"user": callback_query.from_user.id, "btn_id": btn_id}
     await callback_query.answer()
 
+@Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command("start", "all_btns", "broadcast", "users") )
+async def capture_btn_input(client, message):
+    user_id = message.from_user.id
+    if getattr(Bot, "add_btn_state", None) == user_id:
+        btns = message.text.strip().split("\n")
+        inserted = 0
+
+        for btn in btns:
+            if " - " in btn:
+                text, url = btn.split(" - ", 1)
+                await Cluster["buttons"].insert_one({"text": text.strip(), "url": url.strip()})
+                inserted += 1
+
+        await message.reply_text(f"✅ {inserted} button(s) saved.")
+        Bot.add_btn_state = None
+
 @Bot.on_message(filters.text & filters.user(ADMINS))
 async def update_btn_text(client, message):
     state = getattr(Bot, "update_btn_state", None)
@@ -100,46 +143,7 @@ async def update_btn_text(client, message):
 #     joinlink = f"https://t.me/+2ruz5u2nJFViNWI1"
 #     return await m.reply_text(text=START_TEXT.format(m.from_user.mention, joinlink), disable_web_page_preview=True)
 
-@Bot.on_message(filters.command("start") & filters.private)                    
-async def start_handler(c, m):
-    user_id = m.from_user.id
 
-    # Add user to DB if not exists
-    if not await Data.find_one({'id': user_id}):
-        await Data.insert_one({'id': user_id})
-
-    # Default button
-    lazydeveloper_btn = [[
-        InlineKeyboardButton('ABOUT', url='https://t.me/lazydeveloperr')
-    ]]
-
-    # Fetch all dynamic buttons from DB
-    dynamic_buttons = []
-    buttons = await Cluster["buttons"].find().to_list(None)
-    for btn in buttons:
-        dynamic_buttons.append([InlineKeyboardButton(btn["text"], url=btn["url"])])
-
-    # Combine buttons
-    final_keyboard = lazydeveloper_btn + dynamic_buttons
-
-    # Start message
-    joinlink = f"https://t.me/lazydeveloperr"
-    return await c.send_video(
-        chat_id=m.from_user.id,
-        video='https://raw.githubusercontent.com/golasola6/fluffy-doodle/blob/main/lazydeveloperr/lazy_video_logo.mp4',
-        caption=START_TEXT.format(m.from_user.mention, joinlink),
-        reply_markup=InlineKeyboardMarkup(final_keyboard),
-        disable_web_page_preview=True,
-        supports_streaming=True, 
-        protect_content=True, 
-        parse_mode = enums.ParseMode.HTML
-    )
-    #  await m.reply_text(
-    #     text=START_TEXT.format(m.from_user.mention, joinlink),
-    #     reply_markup=InlineKeyboardMarkup(final_keyboard),
-    #     disable_web_page_preview=True
-    # )
-  
 @Bot.on_message(filters.command(["broadcast", "users"]) & filters.user(ADMINS))  
 async def broadcast(c, m):
     if m.text == "/users":
