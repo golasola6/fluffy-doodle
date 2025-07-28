@@ -6,6 +6,8 @@ from os import environ as env
 import asyncio, datetime, time
 from bson import ObjectId
 from pyrogram import enums
+import re
+
 ACCEPTED_TEXT = "Hey {user}\n\nYour Request For {chat} Is Accepted ✅\nSend /start to Get more Updates.\n\nJoin👇👇\n{joinlink}"
 START_TEXT = "Hey {}\n\nI am Auto Request Accept Bot With Working For All Channel. Add Me In Your Channel To Use"
 
@@ -13,7 +15,8 @@ API_ID = int(env.get('API_ID'))
 API_HASH = env.get('API_HASH')
 BOT_TOKEN = env.get('BOT_TOKEN')
 DB_URL = env.get('DB_URL')
-ADMINS = int(env.get('ADMIN'))
+id_pattern = re.compile(r'^.\d+$')
+ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in env.get('ADMINS', '5965340120 6126812037').split()]
 
 Dbclient = AsyncIOMotorClient(DB_URL)
 Cluster = Dbclient['Cluster0']
