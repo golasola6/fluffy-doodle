@@ -190,7 +190,7 @@ async def about_handler(c, cb):
     except Exception as lazy:
         print(lazy)
 
-@Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users"]))
+@Bot.on_message(filters.text & filters.user(ADMINS) & ~filters.command(["start", "all_btns", "broadcast", "users", "accept_old_request"]))
 async def admin_text_handler(client, message):
     user_id = message.from_user.id
 
