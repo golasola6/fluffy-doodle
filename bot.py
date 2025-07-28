@@ -16,8 +16,8 @@ API_HASH = env.get('API_HASH')
 BOT_TOKEN = env.get('BOT_TOKEN')
 DB_URL = env.get('DB_URL')
 id_pattern = re.compile(r'^.\d+$')
-ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in env.get('ADMIN', '5965340120 6126812037').split()]
-
+ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in env.get('ADMINS', '5965340120 6126812037').split()]
+JOINLINK = env.get('JOINLINK', 'https://t.me/+V4qgIH1P7iszZDhl')
 Dbclient = AsyncIOMotorClient(DB_URL)
 Cluster = Dbclient['Cluster0']
 Data = Cluster['users']
@@ -56,7 +56,7 @@ async def start_handler(c, m):
         video = video_data["video"] if video_data else None
 
         # Start message
-        joinlink = f"https://t.me/lazydeveloperr"
+        joinlink = f"{JOINLINK}"
 
         if video:
             return await c.send_video(
@@ -179,7 +179,7 @@ async def about_handler(c, cb):
         final_keyboard =  dynamic_buttons + lazydeveloper_btn
 
         # Start message
-        joinlink = f"https://t.me/lazydeveloperr"
+        joinlink = f"{JOINLINK}"
 
         return await cb.message.edit_text(
                 START_TEXT.format(cb.message.from_user.mention, joinlink),
@@ -273,25 +273,48 @@ async def req_accept(c, m):
     try: 
         # Default button
         lazydeveloper_btn = [[
-            InlineKeyboardButton('ABOUT', url='https://t.me/lazydeveloperr')
+            InlineKeyboardButton('🎃 ÄßÖÚ† 🎃', callback_data="about_bot")
         ]]
 
         # Fetch all dynamic buttons from DB
         dynamic_buttons = []
         buttons = await Cluster["buttons"].find().to_list(None)
-        for btn in buttons:
-            dynamic_buttons.append([InlineKeyboardButton(btn["text"], url=btn["url"])])
+        for i in range(0, len(buttons), 2):
+            row = []
+            row.append(InlineKeyboardButton(buttons[i]["text"], url=buttons[i]["url"]))
+            if i+1 < len(buttons):
+                row.append(InlineKeyboardButton(buttons[i+1]["text"], url=buttons[i+1]["url"]))
+
+            dynamic_buttons.append(row)
 
         # Combine buttons
-        final_keyboard = lazydeveloper_btn + dynamic_buttons
+        final_keyboard =  dynamic_buttons + lazydeveloper_btn
 
-        joinlink = f"https://t.me/lazydeveloperr"
-        await c.send_message(
-            user_id, 
-            ACCEPTED_TEXT.format(user=m.from_user.mention, chat=m.chat.title, joinlink=joinlink), 
-            reply_markup=InlineKeyboardMarkup(final_keyboard),
-            disable_web_page_preview=True
+        # Fetch video from DB
+        video_data = await Cluster["assets"].find_one({"_id": "start_video"})
+        video = video_data["video"] if video_data else None
+
+        # Start message
+        joinlink = f"{JOINLINK}"
+
+        if video:
+            return await c.send_video(
+                chat_id=user_id,
+                video=video,
+                caption=ACCEPTED_TEXT.format(m.from_user.mention, joinlink),
+                reply_markup=InlineKeyboardMarkup(final_keyboard),
+                supports_streaming=True,
+                protect_content=True,
+                parse_mode=enums.ParseMode.HTML
             )
+        else:
+            return await m.reply_text(
+                user_id,
+                text=ACCEPTED_TEXT.format(user=m.from_user.mention, chat=m.chat.title, joinlink=joinlink),
+                reply_markup=InlineKeyboardMarkup(final_keyboard),
+                disable_web_page_preview=True
+            )
+        
     except Exception as e: 
         print(e)
    
