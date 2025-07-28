@@ -264,6 +264,35 @@ async def broadcast(c, m):
     await sts.delete()
     await m.reply_text(f"Broadcast Completed:\nCompleted in {time_taken} seconds.\n\nTotal Users {total_users}\nCompleted: {done} / {total_users}\nSuccess: {success}\nFailed: {failed}", quote=True)
 
+@Bot.on_message(filters.command("accept_old_request") & filters.user(ADMINS))
+async def accept_old_requests(c, m):
+    chat_id = m.chat.id
+
+    try:
+        # Get pending join requests
+        pending = await c.get_chat_join_requests(chat_id)
+
+        if not pending:
+            await m.reply_text("✨ No pending join requests to approve, my love!")
+            return
+
+        count = 0
+        for user in pending:
+            try:
+                await c.approve_chat_join_request(chat_id, user.from_user.id)
+                # Store in DB if not already present
+                if not await Data.find_one({'id': user.from_user.id}):
+                    await Data.insert_one({'id': user.from_user.id})
+                count += 1
+            except Exception as e:
+                print(f"Error approving user {user.from_user.id}: {e}")
+
+        await m.reply_text(f"🥰 Approved {count} pending join requests, sweetheart!")
+
+    except Exception as e:
+        print(f"Error fetching join requests: {e}")
+        await m.reply_text("💔 Something went wrong while accepting requests.")
+
 @Bot.on_chat_join_request()
 async def req_accept(c, m):
     user_id = m.from_user.id
