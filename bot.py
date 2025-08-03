@@ -15,6 +15,7 @@ API_ID = int(env.get('API_ID'))
 API_HASH = env.get('API_HASH')
 BOT_TOKEN = env.get('BOT_TOKEN')
 DB_URL = env.get('DB_URL')
+BOT_USERNAME = env.get('BOT_USERNAME', '')
 id_pattern = re.compile(r'^.\d+$')
 ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in env.get('ADMIN', '5965340120 6126812037').split()]
 JOINLINK = env.get('JOINLINK', 'https://t.me/+V4qgIH1P7iszZDhl')
@@ -22,6 +23,7 @@ Dbclient = AsyncIOMotorClient(DB_URL)
 Cluster = Dbclient['Cluster0']
 Data = Cluster['users']
 Bot = Client(name='LazyAutoAcceptBot', api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
 
 @Bot.on_message(filters.command("start") & filters.private)                    
 async def start_handler(c, m):
@@ -31,7 +33,12 @@ async def start_handler(c, m):
         # Add user to DB if not exists
         if not await Data.find_one({'id': user_id}):
             await Data.insert_one({'id': user_id})
-
+        # ADD Channel/Group button
+        channel_and_group_btn = [[
+            InlineKeyboardButton('➕ Add me to your Channel ➕', url=f"https://t.me/{BOT_USERNAME}?startchannel=true")
+        ],[
+            InlineKeyboardButton('➕ Add me to your Group ➕', url=f"https://t.me/{BOT_USERNAME}?startgroup=true")
+        ]]
         # Default button
         lazydeveloper_btn = [[
             InlineKeyboardButton('🎃 ÄßÖÚ† 🎃', callback_data="about_bot")
@@ -49,7 +56,7 @@ async def start_handler(c, m):
             dynamic_buttons.append(row)
 
         # Combine buttons
-        final_keyboard =  dynamic_buttons + lazydeveloper_btn
+        final_keyboard = channel_and_group_btn + dynamic_buttons + lazydeveloper_btn
 
         # Fetch video from DB
         video_data = await Cluster["assets"].find_one({"_id": "start_video"})
@@ -163,7 +170,12 @@ async def about_handler(c, cb):
         lazydeveloper_btn = [[
             InlineKeyboardButton('🎃 ÄßÖÚ† 🎃', callback_data="about_bot")
         ]]
-
+        # ADD Channel/Group button
+        channel_and_group_btn = [[
+            InlineKeyboardButton('➕ Add me to your Channel ➕', url=f"https://t.me/{BOT_USERNAME}?startchannel=true")
+        ],[
+            InlineKeyboardButton('➕ Add me to your Group ➕', url=f"https://t.me/{BOT_USERNAME}?startgroup=true")
+        ]]
         # Fetch all dynamic buttons from DB
         dynamic_buttons = []
         buttons = await Cluster["buttons"].find().to_list(None)
@@ -176,7 +188,7 @@ async def about_handler(c, cb):
             dynamic_buttons.append(row)
 
         # Combine buttons
-        final_keyboard =  dynamic_buttons + lazydeveloper_btn
+        final_keyboard = channel_and_group_btn + dynamic_buttons + lazydeveloper_btn
 
         # Start message
         joinlink = f"{JOINLINK}"
@@ -301,6 +313,12 @@ async def req_accept(c, m):
         lazydeveloper_btn = [[
             InlineKeyboardButton('🎃 ÄßÖÚ† 🎃', callback_data="about_bot")
         ]]
+        # ADD Channel/Group button
+        channel_and_group_btn = [[
+            InlineKeyboardButton('➕ Add me to your Channel ➕', url=f"https://t.me/{BOT_USERNAME}?startchannel=true")
+        ],[
+            InlineKeyboardButton('➕ Add me to your Group ➕', url=f"https://t.me/{BOT_USERNAME}?startgroup=true")
+        ]]
 
         # Fetch all dynamic buttons from DB
         dynamic_buttons = []
@@ -314,7 +332,7 @@ async def req_accept(c, m):
             dynamic_buttons.append(row)
 
         # Combine buttons
-        final_keyboard =  dynamic_buttons + lazydeveloper_btn
+        final_keyboard = channel_and_group_btn + dynamic_buttons + lazydeveloper_btn
 
         # Fetch video from DB
         video_data = await Cluster["assets"].find_one({"_id": "start_video"})
