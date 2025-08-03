@@ -17,7 +17,7 @@ BOT_TOKEN = env.get('BOT_TOKEN')
 DB_URL = env.get('DB_URL')
 BOT_USERNAME = env.get('BOT_USERNAME', '')
 id_pattern = re.compile(r'^.\d+$')
-ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in env.get('ADMIN', '5965340120 6126812037').split()]
+ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in env.get('ADMIN', '').split()]
 JOINLINK = env.get('JOINLINK', 'https://t.me/+V4qgIH1P7iszZDhl')
 Dbclient = AsyncIOMotorClient(DB_URL)
 Cluster = Dbclient['Cluster0']
@@ -368,3 +368,4 @@ Bot.run()
 
 
 #crafted by - the one and only LazyDeveloperr
+
